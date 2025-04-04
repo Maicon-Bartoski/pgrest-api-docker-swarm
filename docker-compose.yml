@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  postgrest:
+    image: postgrest/postgrest
+    networks:
+      - cloud # Nota: Esta é a rede interna do sistema
+    environment:
+      PGRST_DB_URI: postgresql://[USUARIO]:[SENHA]@[HOST]:[PORTA]/[BANCO]
+      PGRST_DB_SCHEMA: public
+      PGRST_OPENAPI_SERVER_PROXY_URI: [URL_DO_SERVIDOR]
+      PGRST_JWT_SECRET: [CHAVE_SECRETA]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.postgrest.rule=Host(`api.sua-url.com`) # Nota: adicione sua url aqui
+        - traefik.http.routers.postgrest.entrypoints=websecure
+        - traefik.http.routers.postgrest.tls=true
+        - traefik.http.routers.postgrest.tls.certresolver=letsencryptresolver
+        - traefik.http.services.postgrest.loadbalancer.server.port=3000
+        - traefik.http.services.postgrest.loadbalancer.passHostHeader=true
+
+networks:
+  cloud: # Nota: Esta é a rede interna do sistema
+    external: true
+    
